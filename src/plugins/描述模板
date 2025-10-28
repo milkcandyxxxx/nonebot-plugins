@@ -1,0 +1,12 @@
+from nonebot.plugin import PluginMetadata
+
+__plugin_meta__ = PluginMetadata(
+    name="poke",
+    description="将戳一戳更改成查看系统",
+    usage="戳一戳",
+    homepage=None,
+    type="application",
+    config=None,
+    supported_adapters=None,
+    extra={},
+)
