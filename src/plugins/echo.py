@@ -1,12 +1,12 @@
-from nonebot import on_command
-from nonebot.plugin import PluginMetadata
-from src.order import order
+from nonebot import on_command  # 导入 nonebot 的 on_command 命令装饰器
+from nonebot.plugin import PluginMetadata  # 导入 nonebot 的 PluginMetadata 类，用于插件元数据
+from src.order import order  # 导入 src.order 模块中的 order 函数
 
-__plugin_meta__ = PluginMetadata(
-    name="echo",
-    description="模仿",
-    usage="echo",
-    type="application",
+__plugin_meta__ = PluginMetadata(  # 定义插件元数据
+    name="echo",  # 插件名称
+    description="模仿",  # 插件描述
+    usage="echo",  # 插件使用方法
+    type="application",  # 插件类型
 )
 
 echo = on_command("echo")  # 所有人可用

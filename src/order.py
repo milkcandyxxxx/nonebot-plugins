@@ -1,6 +1,16 @@
 def order(command_str):
-    command_str=str(command_str)
-    parts = [p for p in command_str.strip().split(" ") if p]
+
+    """
+    将输入的命令字符串转换为包含整数、浮点数和字符串的列表
+
+    参数:
+        command_str (str): 输入的命令字符串
+
+    返回:
+        list: 包含转换后的元素，可能是整数、浮点数或字符串
+    """
+    command_str=str(command_str)  # 确保输入为字符串类型
+    parts = [p for p in command_str.strip().split(" ") if p]  # 分割字符串并去除空元素
     result = []
     for p in parts:
         try:
