@@ -5,10 +5,11 @@ from nonebot.adapters.onebot.v11.permission import GROUP_ADMIN
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import PluginMetadata
-
 from src.key import ai_api_key
-
-
+'''
+此ai只是为了作为一个简单的回复功能，
+不提供任何知识性的回复（所以她被限制的很傻）
+'''
 __plugin_meta__ = PluginMetadata(
     name="chat_with_ai",
     description="简单的ai聊天",
@@ -17,12 +18,12 @@ __plugin_meta__ = PluginMetadata(
 )
 
 
-
+# 额，由于open的api连接不上，只能选择使用最简单安定post发请求了
 def ai(text):
     API_KEY = f"{ai_api_key}"
     MODEL = "doubao-seed-1-6-flash-250715"
     URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
-
+    # 头部
     headers = {
         "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json"
@@ -31,15 +32,21 @@ def ai(text):
     body = {
         "model": MODEL,
         "messages": [
+            # 管理员提示词
             {"role": "system",
+            #设定
              "content": "你是一只可爱的猫咪助手，说话要活泼俏皮，每句话结尾要带「~喵~」，尽量多的使用颜文字，要耐心回答用户的问题喵~，不要输出空格(要十分简洁的回复哦！！！)"},
+            # 用户
             {"role": "user", "content": f"{text}"}
         ],
+        #增加响应速度，同时减少token消耗
         "thinking": {"type": "disabled"},
+        #限制所有响应内容输出的token
         "max_tokens": 100,
-        "temperature": 0.7
+        #ai的想象力
+        "temperature": 1
     }
-
+    # 构建发送请求
     response = requests.post(URL, headers=headers, json=body)
     response.raise_for_status()
     resp_json = response.json()
