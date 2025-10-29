@@ -1,51 +1,33 @@
-import os  # 导入操作系统接口模块
-import platform  # 导入获取平台相关信息的模块
-import re  # 导入正则表达式模块
-import subprocess  # 导入子进程模块
-from datetime import datetime  # 导入日期时间模块
-from nonebot import on_command, on_notice  # 导入nonebot的命令和通知处理模块
-from nonebot.adapters.onebot.v11 import NoticeEvent, PokeNotifyEvent, MessageEvent  # 导入事件类型
-from nonebot.adapters.onebot.v11.bot import Bot  # 导入Bot类
-from nonebot.internal.rule import Rule  # 导入规则类
-from nonebot.plugin import PluginMetadata  # 导入插件元数据类
-import psutil  # 导入系统及进程库
+import os
+import platform
+import re
+import subprocess
+from datetime import datetime
+from nonebot import on_command, on_notice
+from nonebot.adapters.onebot.v11 import NoticeEvent, PokeNotifyEvent, MessageEvent
+from nonebot.adapters.onebot.v11.bot import Bot
+from nonebot.internal.rule import Rule
+from nonebot.plugin import PluginMetadata
+import psutil
 
-# 插件元数据定义
 __plugin_meta__ = PluginMetadata(
-    name="system_info",  # 插件名称
-    description="命令或戳一戳查看系统信息",  # 插件描述
-    usage="发送「系统信息」「硬件信息」或戳一戳机器人",  # 使用方法
-    homepage=None,  # 主页
-    type="application",  # 插件类型
-    config=None,  # 配置
-    supported_adapters=None,  # 支持的适配器
-    extra={},  # 额外信息
+    name="system_info",
+    description="命令或戳一戳查看系统信息",
+    usage="发送「系统信息」「硬件信息」或戳一戳机器人",
+    homepage=None,
+    type="application",
+    config=None,
+    supported_adapters=None,
+    extra={},
 )
 
-# 1. 自定义戳一戳规则：判断是否戳的是机器人自己
-def is_poke_bot() -> Rule:  # 定义返回Rule类型的函数
-
-    """
-    判断是否戳的是机器人自己
-    Returns:
-        Rule: 返回一个规则对象
-    """
-    async def _is_poke_bot(event: NoticeEvent) -> bool:  # 定义异步判断函数
-
-        """
-        判断事件是否为戳机器人自己
-        Args:
-            event (NoticeEvent): 通知事件
-        Returns:
-            bool: 如果是戳机器人自己返回True，否则返回False
-        """
-        if isinstance(event, PokeNotifyEvent):  # 判断事件是否为戳一戳事件
-            return event.target_id == event.self_id  # 仅戳机器人时触发
+def is_poke_bot() -> Rule:
+    async def _is_poke_bot(event: NoticeEvent) -> bool:
+        if isinstance(event, PokeNotifyEvent):
+            return event.target_id == event.self_id
         return False
     return Rule(_is_poke_bot)
 
-# 2. 定义两个触发器（命令+戳一戳）
-# 命令触发器：响应“系统信息”“硬件信息”（支持带/或不带/前缀）
 command_trigger = on_command(
     "系统信息",
     aliases={"硬件信息"},
@@ -53,16 +35,13 @@ command_trigger = on_command(
     block=True
 )
 
-# 戳一戳触发器：响应戳机器人事件
 poke_trigger = on_notice(
     rule=is_poke_bot(),
     priority=5,
     block=True
 )
 
-# 3. 核心逻辑函数：提取所有系统信息（共用）
 async def get_all_system_info():
-    # 系统基本信息
     sys_basic = (
         f"💻 操作系统：{platform.system()} {platform.release()} {platform.version()}\n"
         f"🖥️ 计算机名称：{platform.node()}\n"
@@ -70,7 +49,6 @@ async def get_all_system_info():
         f"🐍 Python版本：{platform.python_version()}\n"
     )
 
-    # CPU信息
     def get_cpu():
         try:
             system = platform.system()
@@ -108,7 +86,6 @@ async def get_all_system_info():
         f"🔧 使用率：{psutil.cpu_percent(interval=1)}%\n"
     )
 
-    # 内存信息
     mem = psutil.virtual_memory()
     mem_info = (
         f"\n🧠 总内存：{round(mem.total / (1024 ** 3), 2)}GB\n"
@@ -117,7 +94,6 @@ async def get_all_system_info():
         f"🧠 使用率：{mem.percent}%\n"
     )
 
-    # 硬盘信息
     disk_info = "\n💽 硬盘信息：\n"
     for part in psutil.disk_partitions():
         try:
@@ -132,7 +108,6 @@ async def get_all_system_info():
         except Exception:
             continue
 
-    # 显卡信息
     def get_gpu():
         gpu_list = []
         try:
@@ -215,14 +190,12 @@ async def get_all_system_info():
     for i, gpu in enumerate(gpus, 1):
         gpu_info += f"  - 显卡{i}：{gpu['name']}（使用率：{gpu['usage']}）\n"
 
-    # 网络信息
     net_io = psutil.net_io_counters()
     net_info = (
         f"\n📶 总发送流量：{round(net_io.bytes_sent / (1024 ** 2), 2)}MB\n"
         f"📶 总接收流量：{round(net_io.bytes_recv / (1024 ** 2), 2)}MB\n"
     )
 
-    # 运行时间信息
     boot_time = datetime.fromtimestamp(psutil.boot_time())
     uptime = datetime.now() - boot_time
     days = uptime.days
@@ -234,10 +207,8 @@ async def get_all_system_info():
         f"⏰ 系统运行时间：{days}天{hours}小时{minutes}分钟{seconds}秒\n"
     )
 
-    # 组合所有信息
     return sys_basic + cpu_info + mem_info + disk_info + gpu_info + net_info + boot_info
 
-# 4. 两个触发器绑定到同一个处理函数
 @command_trigger.handle()
 async def handle_command(bot: Bot, event: MessageEvent):
     all_info = await get_all_system_info()
