@@ -1,30 +1,45 @@
-import os
-import platform
-import re
-import subprocess
-from datetime import datetime
-from nonebot import on_command, on_notice
-from nonebot.adapters.onebot.v11 import NoticeEvent, PokeNotifyEvent, MessageEvent
-from nonebot.adapters.onebot.v11.bot import Bot
-from nonebot.internal.rule import Rule
-from nonebot.plugin import PluginMetadata
-import psutil
+import os  # 导入操作系统接口模块
+import platform  # 导入获取平台相关信息的模块
+import re  # 导入正则表达式模块
+import subprocess  # 导入子进程模块
+from datetime import datetime  # 导入日期时间模块
+from nonebot import on_command, on_notice  # 导入nonebot的命令和通知处理模块
+from nonebot.adapters.onebot.v11 import NoticeEvent, PokeNotifyEvent, MessageEvent  # 导入事件类型
+from nonebot.adapters.onebot.v11.bot import Bot  # 导入Bot类
+from nonebot.internal.rule import Rule  # 导入规则类
+from nonebot.plugin import PluginMetadata  # 导入插件元数据类
+import psutil  # 导入系统及进程库
 
+# 插件元数据定义
 __plugin_meta__ = PluginMetadata(
-    name="system_info",
-    description="命令或戳一戳查看系统信息",
-    usage="发送「系统信息」「硬件信息」或戳一戳机器人",
-    homepage=None,
-    type="application",
-    config=None,
-    supported_adapters=None,
-    extra={},
+    name="system_info",  # 插件名称
+    description="命令或戳一戳查看系统信息",  # 插件描述
+    usage="发送「系统信息」「硬件信息」或戳一戳机器人",  # 使用方法
+    homepage=None,  # 主页
+    type="application",  # 插件类型
+    config=None,  # 配置
+    supported_adapters=None,  # 支持的适配器
+    extra={},  # 额外信息
 )
 
 # 1. 自定义戳一戳规则：判断是否戳的是机器人自己
-def is_poke_bot() -> Rule:
-    async def _is_poke_bot(event: NoticeEvent) -> bool:
-        if isinstance(event, PokeNotifyEvent):
+def is_poke_bot() -> Rule:  # 定义返回Rule类型的函数
+
+    """
+    判断是否戳的是机器人自己
+    Returns:
+        Rule: 返回一个规则对象
+    """
+    async def _is_poke_bot(event: NoticeEvent) -> bool:  # 定义异步判断函数
+
+        """
+        判断事件是否为戳机器人自己
+        Args:
+            event (NoticeEvent): 通知事件
+        Returns:
+            bool: 如果是戳机器人自己返回True，否则返回False
+        """
+        if isinstance(event, PokeNotifyEvent):  # 判断事件是否为戳一戳事件
             return event.target_id == event.self_id  # 仅戳机器人时触发
         return False
     return Rule(_is_poke_bot)
